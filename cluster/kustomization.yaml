@@ -1,0 +1,6 @@
+commonLabels:
+  environment: dev
+resources:
+  - grafana-credentials.yaml
+  - grafana-pv.yaml
+  - grafana-pvc.yaml
