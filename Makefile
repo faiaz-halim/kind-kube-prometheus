@@ -24,6 +24,11 @@ kubectl-install:
 	sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 	kubectl version --client
 
+pre-cluster:
+	sudo sysctl -w fs.inotify.max_queued_events=1048576
+	sudo sysctl -w fs.inotify.max_user_watches=1048576
+	sudo sysctl -w fs.inotify.max_user_instances=1048576
+
 cluster-create:
 	kind create cluster --config cluster/kind-config.yaml --name mon
 
@@ -74,6 +79,7 @@ cluster-monitoring-download:
 	sed -zi 's/      - env: \[\]/      - env:\n        - name: GF_SECURITY_ADMIN_USER\n          valueFrom:\n            secretKeyRef:\n              name: grafana-credentials\n              key: user\n        - name: GF_SECURITY_ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: grafana-credentials\n              key: password/' prom/manifests/grafana-deployment.yaml
 
 cluster-monitoring-setup:
+	sudo rm -rf nfs/grafana
 	mkdir -p nfs/grafana && chmod -R 777 nfs/grafana
 	kubectl create -f prom/manifests/setup
 
@@ -91,6 +97,6 @@ cluster-monitoring-uninstall:
 delete-cluster:
 	kind delete cluster --name mon
 
-up: cluster-create cluster-network
+up: pre-cluster cluster-create cluster-network
 
 component: cluster-metrics cluster-nfs-provider cluster-monitoring-download cluster-monitoring-setup cluster-monitoring
